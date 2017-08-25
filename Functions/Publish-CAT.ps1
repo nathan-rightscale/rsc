@@ -81,7 +81,7 @@ function Publish-CAT {
     if ($Publish) {
         Write-LogFile -Message "Publish flag set.  Attempting to publish CAT to Self-Service Catalog" -MessageType "INFO" -LogFile $LogFile
         if ($cat_check) {
-        .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)" "overridden_application_href=($cat_check)"
+        .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)" "overridden_application_href=($cat_check.href)"
         } else {
         .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)"
         }
