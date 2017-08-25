@@ -80,8 +80,13 @@ function Publish-CAT {
 
     if ($Publish) {
         Write-LogFile -Message "Publish flag set.  Attempting to publish CAT to Self-Service Catalog" -MessageType "INFO" -LogFile $LogFile
-        if ($cat_check) {
-        .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)" "overridden_application_href=($cat_check.href)"
+        
+        # rsc doesn't support filter[] on catelog index :(
+        $published_cats = .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss index "/api/catalog/catalogs/$RsAccountNum/applications" | ConvertFrom-Json
+        $published_cats | ForEach-Object {if ($_.name -Match $cat_check.name){ $pub_app = $_}
+       
+        if ($pub_app) {
+        .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)" "overridden_application_href=($pub_app.href)"
         } else {
         .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)"
         }
