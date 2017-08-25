@@ -65,7 +65,7 @@ function Publish-CAT {
         .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss update $($cat_check.href) "source=$Source"
     } else {
         Write-LogFile -Message "CAT with the same name not found in Account No. $RsAccountNum" -MessageType "INFO" -LogFile $LogFile
-        Write-LogFile -Message "Uploading CAT to Self-Service Designer" -MessageType "INFO" -LogFile $LogFile        
+        Write-LogFile -Message "Uploading Chttps://github.com/nathan-rightscale/rsc/commits/master/Functions/Publish-CAT.ps1AT to Self-Service Designer" -MessageType "INFO" -LogFile $LogFile        
         .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss create "/api/designer/collections/$RsAccountNum/templates" "source=$Source"
     }
 
@@ -80,7 +80,11 @@ function Publish-CAT {
 
     if ($Publish) {
         Write-LogFile -Message "Publish flag set.  Attempting to publish CAT to Self-Service Catalog" -MessageType "INFO" -LogFile $LogFile
+        if ($cat_check) {
+        .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)" "overridden_application_href=($cat_check)"
+        } else {
         .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)"
+        }
         $catalog = .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss index "/api/catalog/catalogs/$RsAccountNum/applications" | ConvertFrom-Json
         $application = $catalog | Where-Object name -eq $cat_name
         if ($application) {
