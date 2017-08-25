@@ -14,6 +14,8 @@ function Publish-CAT {
     Absolute or relative path to CAT file
 .PARAMETER Publish 
     Boolean.  If $true, the CAT will be published to the Self-Service Catalog after being uploaded.
+.PARAMETER Override
+    Boolean. If $true, the CAT will override the already published Catalog Application with the same name.
 .PARAMETER LogFile
     Absolute or relative path to log file
 .EXAMPLE
@@ -47,6 +49,10 @@ function Publish-CAT {
         [Parameter(Mandatory=$false)]
         [string]
         $Publish,
+        
+        [Parameter(Manatory=$false)]
+        [string]
+        $Override,
 
         [Parameter(Mandatory=$true)]
         [string]
@@ -82,13 +88,18 @@ function Publish-CAT {
         Write-LogFile -Message "Publish flag set.  Attempting to publish CAT to Self-Service Catalog" -MessageType "INFO" -LogFile $LogFile
         
         # rsc doesn't support filter[] on catelog index :(
+        
         $published_cats = .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss index "/api/catalog/catalogs/$RsAccountNum/applications" | ConvertFrom-Json
-        $published_cats | ForEach-Object {if ($_.name -Match $cat_check.name){ $pub_app = $_}
-       
-        if ($pub_app) {
+        $pub_app | $published_cats Where-Object name -eq $cat_name
+        
+        if ($pub_app -and $Override) {
+        Write-LogFile -Message "Found an already published application. Overridinging it." -MessageType "INFO" -LogFile $LogFile
         .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)" "overridden_application_href=($pub_app.href)"
+        } elseif ($pub_app -and !$Override) {
+        Write-LogFile -Message "Found an already published application. Aborting publish. Set -Override to force a publish." -MessageType "ERROR" -LogFile $LogFile
+        EXIT 1
         } else {
-        .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)"
+                .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss publish $($cat_postcheck.href) "id=$($cat_postcheck.id)"
         }
         $catalog = .\rsc.exe --email $RsEmail --pwd $RsPassword --host $RsEndpoint --account $RsAccountNum ss index "/api/catalog/catalogs/$RsAccountNum/applications" | ConvertFrom-Json
         $application = $catalog | Where-Object name -eq $cat_name
